@@ -27,3 +27,10 @@ class Fiware():
             print(f"Request url: {url}")
             print(r)
         return r
+
+    def createUrn(self,etype,ename):
+        urn = f"urn:ngsi-ld:{self.user}:{etype}:{ename}"
+        if self.printInfo:
+            print("Fiware class. createUrn")
+            print(f"urn: {urn}")
+        return urn
