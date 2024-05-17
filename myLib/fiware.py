@@ -34,3 +34,44 @@ class Fiware():
             print("Fiware class. createUrn")
             print(f"urn: {urn}")
         return urn
+
+    def createEntity(self, etype, ename, attributes={}):
+        """
+        Atributes should be in the format:
+        {
+            "accuracy": {
+                "type": "Float",
+                "value": 3.0
+            },
+            "date": {
+                "type": "Text",
+                "value": "2019-04-15 09:21:20"
+            }
+        }
+        """
+        payload={
+            "id": self.createUrn(etype, ename),
+            "type":etype,
+            "name":{
+                "type":"Text",
+                "value":ename
+                },
+            "username":{
+                "type":"Text",
+                "value":self.user
+                }
+            }
+
+        for key, value in attributes.items():
+            payload[key]=value
+            
+        entity={
+            "type":etype,
+            "name":ename,
+            "payload":payload
+            }
+        if self.printInfo:
+            print("Fiware.createEntity")
+            print(json.dumps(entity, indent=4))
+        
+        return entity
