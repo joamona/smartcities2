@@ -1,5 +1,6 @@
 import requests, folium, json
 from myLib import fiwareSettings
+from myLib.fiwareAnswer import FiwareAnswer
 
 class Fiware():
     def __init__(self, url=fiwareSettings.SERVER_URL, 
@@ -75,3 +76,20 @@ class Fiware():
             print(json.dumps(entity, indent=4))
         
         return entity
+    
+    def uploadEntity(self, entity):
+        """
+        Fijate que lo que se sube e el payload del diccionario.
+        No todo el diccionario.
+        """
+        self.requesResult=requests.post(
+            self.urlEntities,
+            headers=self.headers,
+            data=json.dumps(entity["payload"])
+        )
+        if self.printInfo:
+            print("Fiware.uploadEntity")
+            fa=FiwareAnswer(answer=self.requesResult,printInfo=self.
+            printInfo,entity=entity)
+        
+        return fa
