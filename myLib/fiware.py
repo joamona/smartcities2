@@ -17,3 +17,13 @@ class Fiware():
             print("Fiware class. __init__")
             print(f"Url para las entidades: {self.urlEntities}")
             print(f"Usuario: {self.user}")
+
+    def getVersion(self):
+        url=self.url + "/version"
+        res = requests.get(url)
+        r=json.dumps(res.json(), indent=4)
+        if self.printInfo:
+            print("Fiware class.getVersion")
+            print(f"Request url: {url}")
+            print(r)
+        return r
