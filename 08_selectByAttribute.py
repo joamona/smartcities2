@@ -1,6 +1,6 @@
 from myLib.fiware import Fiware
 
-upv=Fiware()
+upv=Fiware(printInfo=True)
 #upv.filter(type='door')
 
 

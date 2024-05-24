@@ -141,8 +141,19 @@ class Fiware():
                 fieldsValuesDict["name"]=name
 
         if fieldsValuesDict is not None and isinstance(fieldsValuesDict, dict):
+            print(fieldsValuesDict)
+            q=""
             for key, value in fieldsValuesDict.items():
-                parameters["q"] = f"{key}=={value}"
+                print(key,value)
+                #ejemplo: q=temperature<24;humidity==75..90;status==running
+                q=q+f"{key}=={value};"
+                
+            
+            q=q[:-1]#quita el último;
+            print(q)
+            parameters["q"] = q
+        
+        print(parameters.items())
         
         if self.printInfo:
             print("Fiware.filterByUserAndProperties.Current parameters:")
