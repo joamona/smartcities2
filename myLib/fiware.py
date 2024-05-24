@@ -19,6 +19,18 @@ class Fiware():
             print(f"Url para las entidades: {self.urlEntities}")
             print(f"Usuario: {self.user}")
 
+
+    def printDict(self,d):
+        if self.printInfo:
+            print("Fiware class. printDict")
+        print(json.dumps(d, indent=4))
+        
+    def printListOfDicts(self,l):
+        if self.printInfo:
+            print("Fiware class. printListOfDicts")        
+        for d in l:
+            self.printDict(d) 
+            
     def getVersion(self):
         url=self.url + "/version"
         res = requests.get(url)
@@ -150,11 +162,8 @@ class Fiware():
                 
             
             q=q[:-1]#quita el último;
-            print(q)
             parameters["q"] = q
-        
-        print(parameters.items())
-        
+
         if self.printInfo:
             print("Fiware.filterByUserAndProperties.Current parameters:")
             print(parameters.items())
@@ -177,3 +186,110 @@ class Fiware():
         fa=FiwareAnswer(answer=response, printInfo=self.printInfo)
         fa.setResultingEntities(resultingEntities=entities)
         return fa
+
+
+    def deleteEntityById(self,entity_id):
+        """
+        There is not a feature in Fiware to delete several entities at once
+        It is necessary select them and remove them one by one
+        """
+        url = self.urlEntities + "/" + entity_id
+        if self.printInfo:
+            print("Fiware.deleteEntityById")
+            print(f"Deleting entity {url}")
+        
+        self.requesResult=requests.delete(url)
+        fa:FiwareAnswer=FiwareAnswer(self.requesResult,printInfo=self.printInfo)
+        return fa
+    
+    def deleteAllEntitiesOfUser(self, username):
+        if self.printInfo:
+            print(f"Fiware.deleteAllEntitiesOfUser. Username: {username}")
+        fa1:FiwareAnswer=self.filter(fieldsValuesDict={"username":username})
+        n=len(fa1.resultingEntities)
+        results:[FiwareAnswer]=[]
+        for i in range(n):
+            if self.printInfo:
+                print(f"Deleting entity {i+1} of {n}")
+            en=fa1.resultingEntities[i]
+            #pay attention. Here the payload field is not
+            #when you upload an entity you get the id as en["payload"]["id"]
+            #but when you download an entity you simply use en["id"]
+            fa:FiwareAnswer=self.deleteEntityById(en["id"])
+            fa.entity=en
+            results.append(fa)
+
+    def createGeoEntity(self, etype, ename, coordinates, attributes={}):
+        #coordinates=[longitude, latitude]
+        
+        payload={
+            "id":self.createUrn(etype, ename),
+            "type":etype,
+            "name":{
+                "type":"text",
+                "value":ename
+                },
+            "username":{
+                "type":"Text",
+                "value":self.user
+                },
+            "location":{
+                "type":"geo:json",
+                "value":{
+                    "type":"Point",
+                    "coordinates":coordinates
+                    }
+                }
+            }
+        for key, value in attributes.items():
+            payload[key]=value
+        
+        entity={
+            "type":etype,
+            "name":ename,
+            "payload":payload
+        }
+
+        if self.printInfo:
+            print("Fiware class. createGeoEntity")
+            print(json.dumps(entity, indent=4))
+        return entity
+    
+    def createCsvEntities(self, etype, csvData:list, csvHeader:list):
+        #csvData es una lista de listas 
+        #csv header is: ["PID", "LONGITUDE", "LATITUDE", "ACCURACY", "DATE"]
+        #ename es PID
+        
+        specialFields=["PID", "LONGITUDE", "LATITUDE"]
+        
+        csvEntities=[]
+        for record in csvData:
+            attributes={}
+            for index, fieldName in enumerate(csvHeader):
+                if not fieldName in specialFields:
+                    value=record[index]
+                    if isinstance(value, float):
+                        attributes[fieldName.lower()]={
+                            "type": "Float",
+                            "value": value
+                            }
+                    elif isinstance(value, int):
+                        attributes[fieldName.lower()]={
+                            "type": "Integer",
+                            "value": value
+                            }
+                    else:
+                        attributes[fieldName.lower()]={
+                            "type": "Text",
+                            "value": value
+                            }   
+            geoEntity=self.createGeoEntity(etype=etype, 
+                                           ename=record[0], 
+                                           coordinates=[record[1],record[2]],
+                                           attributes=attributes)
+    
+            csvEntities.append(geoEntity)
+            if self.printInfo:
+                self.printListOfDicts(csvEntities)
+        return csvEntities
+
